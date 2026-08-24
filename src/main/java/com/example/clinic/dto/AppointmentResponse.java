@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public record AppointmentResponse(
         Long id,
         Long patientId,
+        Long doctorId,
         LocalDateTime appointmentDate,
         String reason,
         String status
@@ -14,6 +15,7 @@ public record AppointmentResponse(
         return new AppointmentResponse(
                 appointment.getId(),
                 appointment.getPatient().getId(),
+                appointment.getDoctor().getId(),
                 appointment.getAppointmentDate(),
                 appointment.getReason(),
                 appointment.getStatus().name()

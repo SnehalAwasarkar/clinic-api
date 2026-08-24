@@ -30,4 +30,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
     }
+
+    @ExceptionHandler(DoctorLicenseNumberConflictException.class)
+    public ResponseEntity<ErrorResponse> handleDoctorLicenseNumberConflict(DoctorLicenseNumberConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(DoctorHasAppointmentsException.class)
+    public ResponseEntity<ErrorResponse> handleDoctorHasAppointments(DoctorHasAppointmentsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
 }

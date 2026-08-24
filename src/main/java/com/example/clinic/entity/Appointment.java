@@ -25,6 +25,10 @@ public class Appointment {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
+
     @Column(nullable = false)
     private LocalDateTime appointmentDate;
 
@@ -37,8 +41,9 @@ public class Appointment {
     public Appointment() {
     }
 
-    public Appointment(Patient patient, LocalDateTime appointmentDate, String reason) {
+    public Appointment(Patient patient, Doctor doctor, LocalDateTime appointmentDate, String reason) {
         this.patient = patient;
+        this.doctor = doctor;
         this.appointmentDate = appointmentDate;
         this.reason = reason;
         this.status = AppointmentStatus.SCHEDULED;
@@ -58,6 +63,14 @@ public class Appointment {
 
     public void setPatient(Patient patient) {
         this.patient = patient;
+    }
+
+    public Doctor getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
     }
 
     public LocalDateTime getAppointmentDate() {
