@@ -1,6 +1,7 @@
 package com.example.clinic.dto;
 
 import com.example.clinic.entity.Patient;
+import java.time.LocalDate;
 
 public record PatientResponse(
         Long id,
@@ -8,6 +9,9 @@ public record PatientResponse(
         String lastName,
         String email,
         String phone,
+        LocalDate dateOfBirth,
+        String gender,
+        String address,
         String status
 ) {
     public static PatientResponse from(Patient patient) {
@@ -17,6 +21,9 @@ public record PatientResponse(
                 patient.getLastName(),
                 patient.getEmail(),
                 patient.getPhone(),
+                patient.getDateOfBirth(),
+                patient.getGender() != null ? patient.getGender().name() : null,
+                patient.getAddress(),
                 patient.getStatus().name()
         );
     }

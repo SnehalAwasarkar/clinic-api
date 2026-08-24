@@ -9,9 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.clinic.dto.AppointmentRequest;
+import com.example.clinic.entity.Gender;
 import com.example.clinic.entity.Patient;
 import com.example.clinic.repository.PatientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,8 @@ class AppointmentControllerIntegrationTest {
     @BeforeEach
     void createPatient() {
         Patient patient = patientRepository.save(
-                new Patient("Grace", "Hopper", "grace@example.com", "5551234567"));
+                new Patient("Grace", "Hopper", "grace@example.com", "5551234567",
+                        LocalDate.of(1980, 12, 9), Gender.FEMALE, "123 Main St"));
         patientId = patient.getId();
     }
 

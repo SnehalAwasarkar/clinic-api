@@ -4,7 +4,7 @@ Phase 0 of the clinic appointment plan: bare-minimum scaffold to prove clean gen
 
 ## Domain model
 
-- **Patient** — firstName, lastName, email (unique), phone, status (`ACTIVE` / `INACTIVE` / `SUSPENDED`, defaults to `ACTIVE`)
+- **Patient** — firstName, lastName, email (unique), phone, dateOfBirth (required, must be in the past), gender (`MALE` / `FEMALE` / `OTHER`, required), address (optional), status (`ACTIVE` / `INACTIVE` / `SUSPENDED`, defaults to `ACTIVE`)
 - **Appointment** — belongs to a Patient; appointmentDate, reason, status (`SCHEDULED` / `CONFIRMED` / `COMPLETED` / `CANCELLED` / `NO_SHOW`, defaults to `SCHEDULED` — the full enum is already here so Phase 2 can add transition validation without reshaping the field)
 
 Status isn't writable through the API yet in Phase 0 — it's just tracked. Phase 2 is expected to add the transition capability on top.
@@ -13,34 +13,34 @@ Status isn't writable through the API yet in Phase 0 — it's just tracked. Phas
 
 Uses a local Postgres.app instance on port 5432 (see `food-delivery-api`'s README in this same folder for why, if you hit port conflicts). One-time setup:
 
-```
+
 psql -h localhost -p 5432 -U "$(whoami)" -d postgres -c "CREATE ROLE clinic WITH LOGIN PASSWORD 'clinic';"
 psql -h localhost -p 5432 -U "$(whoami)" -d postgres -c "CREATE DATABASE clinic OWNER clinic;"
-```
+
 
 Then run:
 
-```
+
 mvn spring-boot:run
-```
+
 
 Listens on `http://localhost:4006`.
 
 ## Tests
 
-```
+
 mvn test
-```
+
 
 Tests run against an in-memory H2 database (`src/test/resources/application.properties`), so they don't need Postgres running.
 
 ## Endpoints
 
 ### Patients
-- `POST /api/patients` — `{ "firstName", "lastName", "email", "phone" }`
+- `POST /api/patients` — `{ "firstName", "lastName", "email", "phone", "dateOfBirth", "gender", "address" }` — dateOfBirth (must be in the past) and gender (`MALE`/`FEMALE`/`OTHER`) are required; address is optional
 - `GET /api/patients` — list all
 - `GET /api/patients/{id}` — get one
-- `PUT /api/patients/{id}` — update firstName/lastName/email/phone
+- `PUT /api/patients/{id}` — update firstName/lastName/email/phone (always overwritten); dateOfBirth/gender/address are partial — only supplied fields are updated, and at least one of the three must be present
 - `DELETE /api/patients/{id}`
 
 ### Appointments

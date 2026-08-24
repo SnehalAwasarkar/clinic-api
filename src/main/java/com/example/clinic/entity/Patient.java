@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "patients")
@@ -28,6 +29,15 @@ public class Patient {
 
     private String phone;
 
+    @Column(nullable = false)
+    private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender gender;
+
+    private String address;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PatientStatus status = PatientStatus.ACTIVE;
@@ -40,6 +50,18 @@ public class Patient {
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
+        this.status = PatientStatus.ACTIVE;
+    }
+
+    public Patient(String firstName, String lastName, String email, String phone,
+                   LocalDate dateOfBirth, Gender gender, String address) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.dateOfBirth = dateOfBirth;
+        this.gender = gender;
+        this.address = address;
         this.status = PatientStatus.ACTIVE;
     }
 
@@ -81,6 +103,30 @@ public class Patient {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public PatientStatus getStatus() {

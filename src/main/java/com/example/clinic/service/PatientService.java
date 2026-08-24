@@ -17,7 +17,11 @@ public class PatientService {
     }
 
     public Patient create(PatientRequest request) {
-        Patient patient = new Patient(request.firstName(), request.lastName(), request.email(), request.phone());
+        if (request.dateOfBirth() == null || request.gender() == null) {
+            throw new IllegalArgumentException("dateOfBirth and gender are required");
+        }
+        Patient patient = new Patient(request.firstName(), request.lastName(), request.email(), request.phone(),
+                request.dateOfBirth(), request.gender(), request.address());
         return patientRepository.save(patient);
     }
 
@@ -36,6 +40,21 @@ public class PatientService {
         patient.setLastName(request.lastName());
         patient.setEmail(request.email());
         patient.setPhone(request.phone());
+
+        if (request.dateOfBirth() == null && request.gender() == null && request.address() == null) {
+            throw new IllegalArgumentException("At least one of dateOfBirth, gender, or address must be provided");
+        }
+
+        if (request.dateOfBirth() != null) {
+            patient.setDateOfBirth(request.dateOfBirth());
+        }
+        if (request.gender() != null) {
+            patient.setGender(request.gender());
+        }
+        if (request.address() != null) {
+            patient.setAddress(request.address());
+        }
+
         return patientRepository.save(patient);
     }
 
