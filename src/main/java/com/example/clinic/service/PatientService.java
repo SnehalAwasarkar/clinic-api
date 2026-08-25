@@ -30,8 +30,11 @@ public class PatientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found: " + id));
     }
 
-    public List<Patient> listAll() {
-        return patientRepository.findAll();
+    public List<Patient> listAll(String q) {
+        if (q == null || q.isBlank()) {
+            return patientRepository.findAll();
+        }
+        return patientRepository.searchByQ(q);
     }
 
     public Patient update(Long id, PatientRequest request) {
