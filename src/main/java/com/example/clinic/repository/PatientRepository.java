@@ -8,11 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
-    @Query("SELECT p FROM Patient p WHERE "
+    @Query("SELECT DISTINCT p FROM Patient p WHERE "
             + "p.firstName ILIKE CONCAT('%', :q, '%') "
             + "OR p.lastName ILIKE CONCAT('%', :q, '%') "
-            + "OR TRIM(CONCAT(p.firstName, ' ', p.lastName)) ILIKE CONCAT('%', :q, '%') "
+            + "OR TRIM(CONCAT(COALESCE(p.firstName, ''), ' ', COALESCE(p.lastName, ''))) ILIKE CONCAT('%', :q, '%') "
             + "OR p.email ILIKE CONCAT('%', :q, '%') "
-            + "OR p.phone ILIKE CONCAT('%', :q, '%')")
+            + "OR REPLACE(REPLACE(p.phone, ' ', ''), '-', '') ILIKE CONCAT('%', REPLACE(REPLACE(:q, ' ', ''), '-', ''), '%') "
+            + "ORDER BY p.id ASC")
     List<Patient> search(@Param("q") String q);
 }

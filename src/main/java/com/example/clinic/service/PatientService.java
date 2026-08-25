@@ -30,21 +30,11 @@ public class PatientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found: " + id));
     }
 
-    public List<Patient> listAll() {
-        return patientRepository.findAll();
-    }
-
     public List<Patient> listAll(String q) {
         if (q == null || q.isBlank()) {
-            return listAll();
+            return patientRepository.findAll();
         }
-        // Treat special characters literally for LIKE/ILIKE patterns.
-        // In PostgreSQL/H2, '%' and '_' are wildcards; escape them so they match as characters.
-        String escaped = q
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
-        return patientRepository.search(escaped);
+        return patientRepository.search(q);
     }
 
     public Patient update(Long id, PatientRequest request) {

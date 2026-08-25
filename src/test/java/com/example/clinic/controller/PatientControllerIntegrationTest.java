@@ -178,124 +178,152 @@ class PatientControllerIntegrationTest {
     }
 
     @Test
-    void searchByFirstNameIsCaseInsensitiveAndPartial() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Rosalind", "Franklin", "rosalind@example.com",
-                "5551112222", LocalDate.of(1970, 2, 2), Gender.FEMALE, "1 DNA Way");
+    void searchByPartialFirstOrLastNameIsCaseInsensitive() throws Exception {
         mockMvc.perform(post("/api/patients")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Marie", "Curie",
+                                "marie@example.com", "1112223333", LocalDate.of(1960, 1, 1), Gender.FEMALE, null))))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/patients").param("q", "rosa"))
+        mockMvc.perform(post("/api/patients")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Pierre", "Curie",
+                                "pierre@example.com", "4445556666", LocalDate.of(1958, 1, 1), Gender.MALE, null))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/patients").param("q", "cur"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].firstName").value("Rosalind"));
-    }
+                .andExpect(jsonPath("$", hasSize(2)));
 
-    @Test
-    void searchByLastNameIsCaseInsensitiveAndPartial() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Katherine", "Johnson", "katherine@example.com",
-                "5553334444", LocalDate.of(1975, 3, 3), Gender.FEMALE, "1 NASA Way");
-        mockMvc.perform(post("/api/patients")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/api/patients").param("q", "JOHN"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].lastName").value("Johnson"));
-    }
-
-    @Test
-    void searchByCombinedFullNameMatches() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Marie", "Curie", "marie@example.com",
-                "5555556666", LocalDate.of(1965, 4, 4), Gender.FEMALE, "1 Radium Way");
-        mockMvc.perform(post("/api/patients")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/api/patients").param("q", "marie curie"))
+        mockMvc.perform(get("/api/patients").param("q", "MARIE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].firstName").value("Marie"));
     }
 
     @Test
-    void searchByEmailIsCaseInsensitiveAndPartial() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Barbara", "McClintock", "barbara.mcclintock@example.com",
-                "5557778888", LocalDate.of(1960, 5, 5), Gender.FEMALE, "1 Genetics Way");
-        mockMvc.perform(post("/api/patients")
+    void searchByCombinedFullNameMatchesEvenWithPartialName() throws Exception {
+        String createResponse = mockMvc.perform(post("/api/patients")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated());
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Niels", "Bohr",
+                                "niels@example.com", "7778889999", LocalDate.of(1955, 1, 1), Gender.MALE, null))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long id = objectMapper.readTree(createResponse).get("id").asLong();
 
-        mockMvc.perform(get("/api/patients").param("q", "MCCLINTOCK@EXAMPLE"))
+        mockMvc.perform(get("/api/patients").param("q", "niels bohr"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].email").value("barbara.mcclintock@example.com"));
+                .andExpect(jsonPath("$[0].id").value(id));
     }
 
     @Test
-    void searchByPhoneIsPartial() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Chien-Shiung", "Wu", "chien@example.com",
-                "5559990000", LocalDate.of(1955, 6, 6), Gender.FEMALE, "1 Physics Way");
+    void searchByEmailSubstringMatches() throws Exception {
         mockMvc.perform(post("/api/patients")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Rosalind", "Franklin",
+                                "rosalind.franklin@example.com", "2223334444", LocalDate.of(1965, 1, 1), Gender.FEMALE, null))))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/patients").param("q", "9990"))
+        mockMvc.perform(get("/api/patients").param("q", "franklin@example"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].phone").value("5559990000"));
+                .andExpect(jsonPath("$[0].lastName").value("Franklin"));
     }
 
     @Test
-    void noQueryParamReturnsUnchangedFullList() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Hedy", "Lamarr", "hedy@example.com",
-                "5551230000", LocalDate.of(1950, 7, 7), Gender.FEMALE, "1 Invention Way");
+    void searchByPhoneIgnoresFormattingDifferences() throws Exception {
         mockMvc.perform(post("/api/patients")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Charles", "Darwin",
+                                "charles@example.com", "555-123-4567", LocalDate.of(1950, 1, 1), Gender.MALE, null))))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/patients"))
+        mockMvc.perform(get("/api/patients").param("q", "5551234567"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].lastName").value("Darwin"));
+
+        mockMvc.perform(get("/api/patients").param("q", "555 123 4567"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].lastName").value("Darwin"));
     }
 
     @Test
-    void searchWithNoMatchesReturnsEmptyList() throws Exception {
-        PatientRequest createRequest = new PatientRequest("Emmy", "Noether", "emmy@example.com",
-                "5554440000", LocalDate.of(1945, 8, 8), Gender.FEMALE, "1 Algebra Way");
+    void searchWithNoMatchesReturnsEmptyArray() throws Exception {
         mockMvc.perform(post("/api/patients")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Isaac", "Newton",
+                                "isaac@example.com", "9990001111", LocalDate.of(1940, 1, 1), Gender.MALE, null))))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/patients").param("q", "zzz-nonexistent"))
+        mockMvc.perform(get("/api/patients").param("q", "nonexistentxyz"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
-    void searchWithSpecialCharactersIsTreatedLiterallyAndDoesNotError() throws Exception {
-        PatientRequest createRequest = new PatientRequest("O'Brien", "Smith", "obrien@example.com",
-                "5552220000", LocalDate.of(1940, 9, 9), Gender.MALE, "1 Special Way");
+    void searchWithSpecialCharactersDoesNotErrorOrInjectWildcards() throws Exception {
         mockMvc.perform(post("/api/patients")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new PatientRequest("O'Brien", "Smith",
+                                "obrien@example.com", "1231231234", LocalDate.of(1945, 1, 1), Gender.MALE, null))))
                 .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/patients").param("q", "100%"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+
+        mockMvc.perform(get("/api/patients").param("q", "a_b"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
 
         mockMvc.perform(get("/api/patients").param("q", "O'Brien"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].firstName").value("O'Brien"));
+    }
 
-        mockMvc.perform(get("/api/patients").param("q", "%_'"))
+    @Test
+    void searchReturnsDistinctPatientsOrderedByIdAscending() throws Exception {
+        String firstResponse = mockMvc.perform(post("/api/patients")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Ada", "Ada",
+                                "adasearch@example.com", "3213214321", LocalDate.of(1970, 1, 1), Gender.FEMALE, null))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long firstId = objectMapper.readTree(firstResponse).get("id").asLong();
+
+        String secondResponse = mockMvc.perform(post("/api/patients")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Bella", "Bella",
+                                "bellasearch@example.com", "6546547654", LocalDate.of(1975, 1, 1), Gender.FEMALE, null))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long secondId = objectMapper.readTree(secondResponse).get("id").asLong();
+
+        mockMvc.perform(get("/api/patients").param("q", "ada"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(firstId));
+
+        mockMvc.perform(get("/api/patients").param("q", "bella"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(secondId));
+    }
+
+    @Test
+    void omittingQReturnsFullUnchangedList() throws Exception {
+        mockMvc.perform(post("/api/patients")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PatientRequest("Full", "List",
+                                "fulllist@example.com", "8889997777", LocalDate.of(1930, 1, 1), Gender.OTHER, null))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/patients"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
     }
 }

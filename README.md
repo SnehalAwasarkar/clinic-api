@@ -39,7 +39,7 @@ Tests run against an in-memory H2 database (`src/test/resources/application.prop
 
 ### Patients
 - `POST /api/patients` — `{ "firstName", "lastName", "email", "phone", "dateOfBirth", "gender", "address" }` — dateOfBirth (must be in the past) and gender (`MALE`/`FEMALE`/`OTHER`) are required; address is optional
-- `GET /api/patients` — list all; accepts an optional `q` query param for case-insensitive, partial full-text search across `firstName`, `lastName`, the combined `"firstName lastName"`, `email`, and `phone`. Omitting `q` preserves the current unfiltered list behavior; a `q` with no matches returns `200` with `[]`.
+- `GET /api/patients` — list all; accepts an optional `q` query param that does a case-insensitive, partial (substring) match across firstName, lastName, the combined "firstName lastName", email, and phone (phone is matched with spaces/dashes normalized out of both sides). Matching is parameterized (no literal wildcard/injection risk from `q`), results are distinct and ordered by id ascending, and no matches returns `200` with `[]`. When `q` is omitted, behavior is unchanged (all patients). Note: search currently ignores any future role-based scoping.
 - `GET /api/patients/{id}` — get one
 - `PUT /api/patients/{id}` — update firstName/lastName/email/phone (always overwritten); dateOfBirth/gender/address are partial — only supplied fields are updated, and at least one of the three must be present
 - `DELETE /api/patients/{id}`
